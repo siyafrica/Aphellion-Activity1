@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+    <html>
+        <head>
+            <meta charset="utf-8">
+            
+            <script type="text/javascript" src="d3.v3.js">
+            </script>
+        </head>
+        <body>
+            
+        </body>
+        <script type="text/javascript">
+            var width = 960;
+            var height = 500;
+            
+            //new projection
+				var projection = d3.geo.mercator()
+                                                .translate([width/2, height/2])
+								   .scale([500]);
+            
+            var path = d3.geo.path()
+                        .projection(projection);
+                        
+                        
+            var svg = d3.select("body")
+                        .append("svg")
+                        .attr("width", width)
+                        .attr("height", height);
+                        
+            var g = svg.append("g")
+                        .call(d3.behavior.zoom()
+                              .scaleExtent([1, 10])
+                              .on("zoom", zoom));
+                        
+            d3.json("kenya-topo.json", function(error, topology) {
+                g.selectAll("path")
+                .data(topojson.feature(topology, topology.objects.states).features)
+                .enter()
+                .append("path")
+                .attr("d", path);
+                });
+            
+            function zoom() {
+                g.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+            }
+        </script>
+        
+    </html>

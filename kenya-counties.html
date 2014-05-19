@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>D3: Loading GeoJSON data and generating SVG paths</title>
+		<script type="text/javascript" src="d3.v3.js"></script>
+		<style type="text/css">
+			/* No style rules here yet */		
+		</style>
+	</head>
+	<body>
+		<script type="text/javascript">
+
+			//Width and height
+			var w = 500;
+			var h = 500;
+
+			//Create SVG element
+			var svg = d3.select("body")
+						.append("svg")
+						.attr("width", w)
+						.attr("height", h);
+						
+			
+			//Load in GeoJSON data
+			d3.json("kenya.geojson", function(json) {
+			    
+				//Create first guess for the projections
+				var center = d3.geo.centroid(json)
+				var scale = 2000;
+				var offset = [w/2, h/2];
+				var projection = d3.geo.mercator()
+						    .scale(scale)
+						    .center(center)
+						    .translate(offset);
+				
+				//Define default path generator
+				var path = d3.geo.path()
+				    .projection(projection);
+				    
+				//using the path determine the bounds of the current map and use
+				//these to determine better values for the scale and translation
+				var bounds = path.bounds(json);
+				var hscale = scale*w / (bounds[1][0] - bounds[0][0]);
+				var vscale = (hscale < vscale) ? hscale : vscale;
+				var offset = [w - (bounds[0][0] + bounds[1][0])/2, h - (bounds[0][1] + bounds[1][1]/2)];
+				
+				//new projection
+				projection = d3.geo.mercator().center(center)
+						.scale(scale).translate(offset);
+				path = path.projection(projection);
+				
+				//add a rectangle to see the bound of the svg
+				svg.append("rect").attr("width", w).attr("height", h).style("stroke", "black").style("fill", "none");
+				
+
+				
+				//Bind data and create one path per GeoJSON feature
+				svg.selectAll("path")
+				   .data(json.features)
+				   .enter()
+				   .append("path")
+				   .attr("d", path)
+				   .style("fill", "steelblue");
+		
+			});
+			
+		</script>
+	</body>
+</html>

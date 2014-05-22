@@ -3,7 +3,7 @@
         <head>
             <meta charset="utf-8">
             
-            <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/d3/3.4.7/d3.js"></script>
+            <script type="text/javascript" src="d3.v3.js"></script>
             <script type="text/javascript" src="topojson.js">
             </script>
         </head>
@@ -16,16 +16,27 @@
             
             //new projection
 	    var projection = d3.geo.mercator()
-				.scale([500]);
+                                .center([36.8000, 1.2667])
+				.scale([1000])
+                                .translate([width/2, height/2]);
             
+            //create a path generator
             var path = d3.geo.path()
                         .projection(projection);
+                        
+            /*Compute the bounds of a feature of interest, then derive scale & translate
+            var b = path.bounds(json),
+                s = .95/Math.max((b[1][0] - b[0][0]) / width, (b[1][1] - b[0][1]) / height),
+                t = [(width - s * (b[1][0] + b[0][0])) / 2, (height - s * (b[1][1] + b[0][1]))];
+                
+            projection.scale(s).translate(t);*/
                         
                         
             var svg = d3.select("body")
                         .append("svg")
                         .attr("width", width)
-                        .attr("height", height);
+                        .attr("height", height)
+                        .style("fill", "steelblue");
                         
             var g = svg.append("g")
                         .call(d3.behavior.zoom()

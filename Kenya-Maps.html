@@ -2,7 +2,7 @@
     <html>
         <head>
             <meta charset="UTF-8">
-                <script type="text/javascript" src="js/d3.v3.js"></script>
+                <script type="text/javascript" src="d3.v3.js"></script>
                 <script type="text/javascript" src="js/topojson.js"></script>
                 <script type="text/javascript" src="js/jquery.js"></script>
                 <script type="text/javascript" src="js/bootstrap.js"></script>
@@ -20,34 +20,34 @@
             </div>
             </br>
             <div class="row">
-                <div  class="span4" id="Map1"></div>
-                <div class="span2" id="paragraph">
-                    
+                <div  class="span6" id="Map1">
+                    <p>This first map of Kenya was made using TopoJSON.</p>
                 </div>
-                <div class="span4" id="Map2"></div>
-                <div class="span2">
-                    <p>Mauris ornare mollis odio, non molestie arcu ullamcorper sit amet. Vivamus ultrices, est id ullamcorper blandit, risus ligula fringilla nibh, in convallis orci urna et sapien. Phasellus malesuada accumsan velit ut tristique. Duis vehicula pellentesque gravida. Curabitur at mollis turpis, in convallis risus. Sed faucibus non dui quis vehicula. Fusce mollis ullamcorper adipiscing. Vestibulum hendrerit luctus erat ac iaculis.</p>
+                <div class="span6" id="Map2">
+                    <p>This second map of Kenya was made using GeoJSON.</p>
                 </div>
             </div>
         </body>
         <script type="text/javascript">
-            d3.select("div#paragraph").text("Mauris ornare mollis odio, non molestie arcu ullamcorper sit amet. Vivamus ultrices, est id ullamcorper blandit, risus ligula fringilla nibh, in convallis orci urna et sapien. Phasellus malesuada accumsan velit ut tristique. Duis vehicula pellentesque gravida. Curabitur at mollis turpis, in convallis risus. Sed faucibus non dui quis vehicula. Fusce mollis ullamcorper adipiscing. Vestibulum hendrerit luctus erat ac iaculis");
-            
-            var width = 300;
+             var width = 460;
             var height = 400;
             
-    //TopoJSON Map
-    //new projection
+         //TopoJSON Map
+            //new projection
 	    var projection = d3.geo.mercator()
                                 .center([36.8000, 1.2667])
 				.scale([1000])
                                 .translate([width/2, height/2]);
+                                
+            var color = d3.scale.threshold()
+                        .domain([10, 20, 30, 40, 50])
+                        .range(["#9e9ac8", "756bb1", "dadaeb", "bcbddc", "#E82D0C"]);
                         
                         
-    var path = d3.geo.path().projection(projection);
+            var path = d3.geo.path().projection(projection);
     
     
-    var svg = d3.select("div#Map1")
+             var svg = d3.select("div#Map1")
                         .append("svg")
                         .attr("width", width)
                         .attr("height", height)
@@ -58,28 +58,28 @@
                               .scaleExtent([1, 10])
                               .on("zoom", zoom));
                         
-            d3.json("js/kenya-topo.json", function(error, topology) {
+            d3.json("js/output.json", function(error, topology) {
                 g.selectAll("path")
-                .data(topojson.feature(topology, topology.objects.Kenya).features)
+                .data(topojson.feature(topology, topology.objects.kenya).features)
                 .enter()
                 .append("path")
-                .attr("d", path);
+                .attr("d", path)
                 });
             
-            svg.append("rect").attr("width", width).attr("height", height).style("stroke", "black").style("fill", "none");
+            svg.append("rect").attr("width", width).attr("height", height).style("stroke", "black").style("fill", "none")
+                       ;
             
             function zoom() {
-                g.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
-            };
-    
-    //GeoJSON Map        
+                g.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")")};
+            
+            //GeoJSON Map
     var svg = d3.select("div#Map2")
                 .append("svg")
                 .attr("width", width)
                 .attr("height", height);
                 
     //Load in GeoJSON data
-			d3.json("js/kenya.geojson", function(json) {
+			d3.json("js/Kenya.geojson", function(json) {
 			    
 				//Create first guess for the projections
 				var center = d3.geo.centroid(json)
@@ -119,7 +119,7 @@
 				   .attr("d", path)
 				   .style("fill", "steelblue");
 		
-			});            
-        </script>
+			});
+       </script>
         
     </html>

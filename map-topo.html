@@ -1,93 +1,101 @@
 <!DOCTYPE html>
-    <html>
-        <head>
-            <meta charset="UTF-8">
-                <script type="text/javascript" src="d3.v3.js"></script>
-                <script type="text/javascript" src="js/topojson.js"></script>
-                <script type="text/javascript" src="js/jquery.js"></script>
-                <script type="text/javascript" src="js/bootstrap.js"></script>
-                
-                
-                
-                <link rel="stylesheet" href="css/bootstrap.css" media="screen">
-        </head>
-        <body>
-            <div class="row">
-            <header class="span12">
-                <h1>Aphellion Activity 1 - Kenya Maps</h1>
-                <h3>The goal of this activity is generate two maps one drawn with D3.js using GeoJSON to generates the paths, the other drawn using TopoJSON to generate the paths.</h3>
-            </header>
-            </div>
-            </br>
-            <div class="row">
-                <div  class="span6" id="Map1">
-                    <p>This first map of Kenya was made using TopoJSON.</p>
-                </div>
-                <div class="span6" id="Map2">
-                    <p>This second map of Kenya was made using GeoJSON.</p>
-                </div>
-            </div>
-        </body>
-        <script type="text/javascript">
-            var width = 460;
-            var height = 400;
-            
-            //Setting the color domains for the choropleth maps
-            var color = d3.scale.threshold()
-                        .domain([10, 20, 30, 40, 50])
-                        .range(["#9e9ac8", "756bb1", "dadaeb", "bcbddc", "#E82D0C"]);
-         
-         //TopoJSON Map
-            //new projection
-	           var projection = d3.geo.mercator()
-                                .center([36.8000, 1.2667])
-				                .scale([1000])
-                                .translate([width/2, height/2]);
-                                 
-                        
-                        
-            var path = d3.geo.path().projection(projection);
-            
-             //Drawing Choropleth
-             
-             var svg = d3.select("div#Map1")
-                        .append("svg")
-                        .attr("width", width)
-                        .attr("height", height);
-                        
-            var g = svg.append("g")
-                        .call(d3.behavior.zoom()
-                        .scaleExtent([1, 10])
-                        .on("zoom", zoom));
-                        
-            d3.json("js/output.json", function(error, topology) {
-                d3.csv("js/Schools.csv", function(error, Schools) {
-                  var rateById = {};
-		          
-                  Schools.forEach(function (d) {
-		          rateById[d.id] = +d.values;
-		              });
-		
-		  g.append("g")
-                .attr("class", "districts")
-                .selectAll("path")
-                .data(topojson.feature(topology, topology.objects.kenya).features)
-                .enter()
-                .append("path")
-                .attr("d", path)
-                .style("fill", function(d) {
-                    return color(rateById[d.id]);
-			    });
-		
+<html>
 
-            });                        
-            });
-    
-            //Draw a rect around the map
-            svg.append("rect").attr("width", width).attr("height", height).style("stroke", "black").style("fill", "none")
-                       ;
-            
-            function zoom() {
-                g.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")")};
-        </script>
-    </html>
+<head>
+    <meta charset="utf-8">
+    <script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.4.8/d3.min.js"></script>
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/topojson/1.1.0/topojson.min.js"></script>
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.1.1/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="css/bootstrap.css">
+
+    <style>
+     .districts {
+            fill: none;
+            stroke: #fff;
+            stroke-linejoin: round;
+        } 
+    </style>
+</head>
+
+<body>
+    <div class="row">
+        <div class="span6" id="Map1">
+            <p>This first map of Kenya was made using TopoJSON.</p>
+        </div>
+        <div class="span6" id="Map2">
+            <p>This second map of Kenya was made using GeoJSON.</p>
+        </div>
+    </div>
+
+    <script>
+        var width = 460;
+        var height = 400;
+
+         //Setting the color domains for the choropleth maps
+        var color = d3.scale.threshold()
+            .domain([10, 20, 30, 40, 50])
+            .range(["#9e9ac8", "756bb1", "dadaeb", "bcbddc", "#E82D0C"]);
+
+         //TopoJSON Map
+         //new projection
+        var projection = d3.geo.mercator()
+            .center([36.8000, 1.2667])
+            .scale([1000])
+            .translate([width / 2, height / 2]);
+
+        var path = d3.geo.path().projection(projection);
+
+         //Drawing Choropleth
+
+        var svg = d3.select("div#Map1")
+            .append("svg")
+            .attr("width", width)
+            .attr("height", height)
+            .style("fill", "steelblue");
+
+        var g = svg.append("g")
+            .call(d3.behavior.zoom()
+                .scaleExtent([1, 10])
+                .on("zoom", zoom));
+
+        d3.json("js/output.json", function(error, topology) {
+            d3.csv("Schools.csv", function(error, districts) {
+                var rateById = {};
+
+                districts.forEach(function(d) {
+                    rateById[d.id] = +d.schools;
+                });
+                
+                //console.log(rateById);
+
+                g.selectAll("path")
+                    .data(topojson.feature(topology, topology.objects.kenya).features)
+                    .enter()
+                    .append("path")
+                    .attr("d", path)
+                    .style("fill", function(d) {
+                        return color(rateById[d.id]);
+                    });
+
+                g.append("path")
+                    .datum(topojson.mesh(topology, topology.objects.kenya,
+                        function(a, b) {
+                            return a !== b
+                        }))
+                    .attr("class", "districts")
+                    .attr("d", path);
+            })
+        });
+
+
+         //Draw a rect around the map
+        svg.append("rect").attr("width", width).attr("height", height).style("stroke", "black").style("fill", "none");
+
+        function zoom() {
+            g.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")")
+        };
+    </script>
+</body>
+
+</html>

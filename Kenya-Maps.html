@@ -2,7 +2,7 @@
     <html>
         <head>
             <meta charset="UTF-8">
-                <script type="text/javascript" src="d3.v3.js"></script>
+                <script type="text/javascript" src="js/d3.v3.js"></script>
                 <script type="text/javascript" src="js/topojson.js"></script>
                 <script type="text/javascript" src="js/jquery.js"></script>
                 <script type="text/javascript" src="js/bootstrap.js"></script>
@@ -10,41 +10,49 @@
                 
                 
                 <link rel="stylesheet" href="css/bootstrap.css" media="screen">
+                <style type="text/css">
+
+                    .row {padding-left: 50px;}
+
+                    .q0-9 { fill: #FF0000;}
+                    .q1-9 { fill: #FF6600;}
+                    .q2-9 { fill: #FFCC00;}
+                    .q3-9 { fill: #33CC33;}
+                    .q4-9 { fill: #009933;}
+
+                </style>
         </head>
         <body>
             <div class="row">
             <header class="span12">
                 <h1>Aphellion Activity 1 - Kenya Maps</h1>
-                <h3>The goal of this activity is generate two maps one drawn with D3.js using GeoJSON to generates the paths, the other drawn using TopoJSON to generate the paths.</h3>
+                <h3>The goal of this activity is generate a Choropleth map of Kenya using TopoJSON to generate the paths.</h3>
             </header>
             </div>
             </br>
             <div class="row">
-                <div  class="span6" id="Map1">
+                <div  class="span12" id="Map1">
                     <p>This first map of Kenya was made using TopoJSON.</p>
-                </div>
-                <div class="span6" id="Map2">
-                    <p>This second map of Kenya was made using GeoJSON.</p>
                 </div>
             </div>
         </body>
         <script type="text/javascript">
-            var width = 460;
+            var width = 940;
             var height = 400;
-            
-            //Setting the color domains for the choropleth maps
-            var color = d3.scale.threshold()
-                        .domain([10, 20, 30, 40, 50])
-                        .range(["#9e9ac8", "756bb1", "dadaeb", "bcbddc", "#E82D0C"]);
+            var data = [10,20,30,40,50];
+
+        //Set up the quantatize scale
+        var quantize = d3.scale.quantize()
+                        .domain([0, 49])
+                        .range(d3.range(5).map(function(d) { return "q" + d + "-9"; }));
          
          //TopoJSON Map
             //new projection
 	    var projection = d3.geo.mercator()
                                 .center([36.8000, 1.2667])
-				.scale([1000])
+				                .scale([1500])
                                 .translate([width/2, height/2]);
-                                 
-                        
+
                         
             var path = d3.geo.path().projection(projection);
             
@@ -61,24 +69,52 @@
                               .scaleExtent([1, 10])
                               .on("zoom", zoom));
                         
-            d3.json("js/output.json", function(error, kenya) {
-              /*  var rateById = {};
-                kenya.forEach (function (d) {
-                    rateById[d.id] = +d.rate;
-                    })*/
-                
-                d3.json("js/output.json", function(error, topology) {
+            d3.json("js/kenyaTopo.json", function(error, kenya) {
+                d3.json("js/kenyaTopo.json", function(error, topology) {
                 g.selectAll("path")
                 .data(topojson.feature(topology, topology.objects.kenya).features)
                 .enter()
                 .append("path")
-                .attr("d", path)
-                .style("fill", function(d) {
-                    return color(rateById[d.id]);
-                       });
-                    });   
-                });
-                        
+                .attr("class", function(d) { return quantize(d.properties.schools); })
+                .attr("d", path);
+                    });
+               
+                });    
+
+            var legend = d3.select("div#Map1 svg")
+                            .append("svg")
+                            .attr("class", "legend")
+                            .attr("width", 200)
+                            .attr("height", 100)
+                            .attr("x", width - 920)
+                            .attr("y", height - 90);
+
+                legend.selectAll("rect")
+                        .data(data)
+                        .enter()
+                        .append("rect")
+                        .attr("width", 20)
+                        .attr("height", 20)
+                        .attr("x", function(i){return +i*2.2;})
+                        .style("fill", function(d){
+                            if (d <= 10) {
+                                return "#FF0000";
+                            } else if (d <= 20) {
+                                return "#FF6600";
+                            } else if (d <= 30) {
+                                return "#FFCC00";
+                            } else if (d <= 40) {
+                                return "#33CC33";
+                            } else if (d <= 50) {
+                                return "#009933";
+                            };
+                        });
+
+                legend.append("text")
+                        .attr("x", width - 920)
+                        .attr("y", height - 90)
+                        .attr("dy", ".35em")
+                        .text(function(d) { return d; });        
             
     
             //Draw a rect around the map
@@ -88,54 +124,7 @@
             function zoom() {
                 g.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")")};
             
-            //GeoJSON Map
-    var svg = d3.select("div#Map2")
-                .append("svg")
-                .attr("width", width)
-                .attr("height", height);
-                
-    //Load in GeoJSON data
-			d3.json("js/Kenya.geojson", function(json) {
-			    
-				//Create first guess for the projections
-				var center = d3.geo.centroid(json)
-				var scale = 2000;
-				var offset = [width/2, height/2];
-				var projection = d3.geo.mercator()
-						    .scale(scale)
-						    .center(center)
-						    .translate(offset);
-				
-				//Define default path generator
-				var path = d3.geo.path()
-				    .projection(projection);
-				    
-				//using the path determine the bounds of the current map and use
-				//these to determine better values for the scale and translation
-				var bounds = path.bounds(json);
-				var hscale = scale*width / (bounds[1][0] - bounds[0][0]);
-				var vscale = (hscale < vscale) ? hscale : vscale;
-				var offset = [width - (bounds[0][0] + bounds[1][0])/2, height - (bounds[0][1] + bounds[1][1]/2)];
-				
-				//new projection
-				projection = d3.geo.mercator().center(center)
-						.scale(scale).translate(offset);
-				path = path.projection(projection);
-				
-				//add a rectangle to see the bound of the svg
-				svg.append("rect").attr("width", width).attr("height", height).style("stroke", "black").style("fill", "none");
-				
-
-				
-				//Bind data and create one path per GeoJSON feature
-				svg.selectAll("path")
-				   .data(json.features)
-				   .enter()
-				   .append("path")
-				   .attr("d", path)
-				   .style("fill", "steelblue");
-		
-			});
+           
        </script>
         
     </html>

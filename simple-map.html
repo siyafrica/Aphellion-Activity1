@@ -1,0 +1,53 @@
+<!Doctype html>
+	<html>
+		<head>
+			<meta charset="utf-8"
+			<title>Choropleth Map of Kenya using TopoJSON</title>
+			<script type="text/javascript" src="d3.v3.js"></script>
+			<script type="text/javascript" src="topojson.js"></script>
+			<style type="text/css">
+
+			</style>
+
+		</head>
+		<body>
+
+			<script type="text/javascript">
+            var width = 960;
+            var height = 500;
+            
+            //new projection
+	    var projection = d3.geo.mercator()
+                                .center([36.8000, 1.2667])
+				.scale([1000])
+                                .translate([width/2, height/2]);
+            
+            //create a path generator
+            var path = d3.geo.path()
+                        .projection(projection);
+            var svg = d3.select("body")
+                        .append("svg")
+                        .attr("width", width)
+                        .attr("height", height)
+                        .style("fill", "steelblue");
+                        
+            var g = svg.append("g")
+                        .call(d3.behavior.zoom()
+                              .scaleExtent([1, 10])
+                              .on("zoom", zoom));
+                        
+            d3.json("kenyaTopo.json", function(error, topology) {
+                g.selectAll("path")
+                .data(topojson.feature(topology, topology.objects.Kenya).features)
+                .enter()
+                .append("path")
+                .attr("d", path);
+                });
+            
+            function zoom() {
+                g.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+            }
+        </script>
+		</body>
+
+	</html>

@@ -12,8 +12,6 @@
     <style>
      .districts {
             fill: none;
-            stroke: #fff;
-            stroke-linejoin: round;
         } 
     </style>
 </head>
@@ -35,7 +33,7 @@
          //Setting the color domains for the choropleth maps
         var color = d3.scale.threshold()
             .domain([10, 20, 30, 40, 50])
-            .range(["#9e9ac8", "756bb1", "dadaeb", "bcbddc", "#E82D0C"]);
+            .range(["#ff6600", "#ff0000", "#ffff00", "#33cc33", "#003399"]);
 
          //TopoJSON Map
          //new projection
@@ -67,7 +65,7 @@
                     rateById[d.id] = +d.schools;
                 });
                 
-                //console.log(rateById);
+                console.log(rateById);
 
                 g.selectAll("path")
                     .data(topojson.feature(topology, topology.objects.kenya).features)
